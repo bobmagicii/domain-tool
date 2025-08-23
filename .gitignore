@@ -1,0 +1,11 @@
+.phpunit.cache
+.vendex
+.DS_Store
+
+/env.lock
+/backups
+/logs
+/temp
+/vendor
+
+# eof
