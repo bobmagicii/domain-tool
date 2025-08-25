@@ -27,11 +27,9 @@ Print a report for all the domains listed in all the files. One domain per line.
 * `report --sort` - Sort the report by domain name.
 * `report --short` - Only show the report table.
 
-
-
 ## Dev Notes
 
-### Build PHAR
+#### Build PHAR
 
 * You Give: `php bin/domain.php phar`
 * You Receive: `build/domain-ver.phar`
