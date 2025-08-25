@@ -5,8 +5,8 @@
 
 ## Requirements
 
-* PHP 8.3 (with cURL, OpenSSL)
-* OpenRDAP v0.9.1
+* PHP 8.3 (with CLI, cURL, OpenSSL)
+* OpenRDAP v0.9.1 (CLI App)
 
 ## Basic Usage
 
