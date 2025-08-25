@@ -8,6 +8,10 @@
 * PHP 8.3 (with CLI, cURL, OpenSSL)
 * OpenRDAP v0.9.1 (CLI App)
 
+## Instructions
+
+* Put the one PHAR file where ever you damn well please.
+
 ## Basic Usage
 
 Print a report for the list of domains.
