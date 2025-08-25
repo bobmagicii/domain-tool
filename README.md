@@ -3,6 +3,11 @@
 * use RDAP to check Domain registrations.
 * use cURL or OpenSSL to check SSL Certs.
 
+## Requirements
+
+* PHP 8.3 (with cURL, OpenSSL)
+* OpenRDAP v0.9.1
+
 ## Basic Usage
 
 Print a report for the list of domains.
@@ -18,9 +23,11 @@ Print a report for all the domains listed in all the files. One domain per line.
 * `report --sort` - Sort the report by domain name.
 * `report --short` - Only show the report table.
 
+
+
 ## Dev Notes
 
 ### Build PHAR
 
-* Input: `php domain.php phar`
-* Output: `build/domain-ver.phar`
+* You Give: `php bin/domain.php phar`
+* You Receive: `build/domain-ver.phar`
