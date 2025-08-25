@@ -13,7 +13,7 @@ use Exception;
 ################################################################################
 
 #[Console\Meta\Application('DomainTool', '0.0.1-dev', NULL, 'domain.phar')]
-class AppMain
+class App
 extends Console\Client {
 
 	const
@@ -36,10 +36,10 @@ extends Console\Client {
 	protected Common\Datastore
 	$Library;
 
-	public Dye\Colour
+	public ?Dye\Colour
 	$BorderColour;
 
-	public Dye\Colour
+	public ?Dye\Colour
 	$FooterColour;
 
 	////////////////////////////////////////////////////////////////
@@ -88,8 +88,11 @@ extends Console\Client {
 	PrepareTheme():
 	void {
 
-		$this->BorderColour = Dye\Colour::From('#FFFF44');
-		$this->FooterColour = Dye\Colour::From('#696969');
+		//$this->BorderColour = Dye\Colour::From('#FFFF44');
+		//$this->FooterColour = Dye\Colour::From('#696969');
+
+		$this->BorderColour = NULL;
+		$this->FooterColour = NULL;
 
 		return;
 	}
@@ -293,8 +296,11 @@ extends Console\Client {
 	}
 
 	protected function
-	PrintFilesHeader(Common\Datastore $Files):
+	PrintFilesHeader(?Common\Datastore $Files):
 	void {
+
+		if(!$Files || !$Files->Count())
+		return;
 
 		$Header = Console\Elements\H2::New(
 			Client: $this,
@@ -308,10 +314,10 @@ extends Console\Client {
 	}
 
 	protected function
-	PrintFilesReport(Common\Datastore $Files):
+	PrintFilesReport(?Common\Datastore $Files):
 	void {
 
-		if(!$Files->Count())
+		if(!$Files || !$Files->Count())
 		return;
 
 		$List = Console\Elements\ListBullet::New(
@@ -348,8 +354,9 @@ extends Console\Client {
 		$Blank = '-';
 		$Headers = [ str_repeat($Block, 2), 'Domain', 'Registrar', 'Registration Expire', 'SSL Cert Expire' ];
 		$Rows = new Common\Datastore;
-		$Fmts = new Common\Datastore(['s', 's', 's', 's', 's' ]);
 		$Styles = new Common\Datastore;
+		$CountRegStatus = new Common\Datastore;
+		$CountCertStatus = new Common\Datastore;
 
 		$Legend = new Common\Datastore([
 			'OK'       => '#55EE88',
@@ -360,7 +367,7 @@ extends Console\Client {
 			'Default'  => NULL,
 		]);
 
-		$Domains->EachKeyValue(function(string $Domain, array $Data) use($Rows, $Fmts, $Styles, $Legend, $Block, $Blank) {
+		$Domains->EachKeyValue(function(string $Domain, array $Data) use($Rows, $Styles, $Legend, $Block, $Blank, $CountRegStatus, $CountCertStatus) {
 
 			list($Reg, $Cert) = $Data;
 
@@ -405,6 +412,9 @@ extends Console\Client {
 
 			////////
 
+			$CountRegStatus->Bump($Reg->GetStatusWord(), 1);
+			$CountCertStatus->Bump($Cert->GetStatusWord(), 1);
+
 			$StatusFlags = sprintf(
 				'%s%s',
 				$this->Format($Block, C: $RegStyle),
@@ -413,13 +423,13 @@ extends Console\Client {
 
 			////////
 
-			$Row = [];
-			$Row[] = $StatusFlags;
-			$Row[] = $Reg->GetDomain() ?: $Blank;
-			$Row[] = $Reg->GetRegistrarName() ?: $Blank;
-			$Row[] = $RegLabel ?: $Blank;
-			$Row[] = $CertLabel ?: $Blank;
-			$Rows->Push($Row);
+			$Rows->Push([
+				$StatusFlags,
+				($Reg->GetDomain() ?: $Blank),
+				($Reg->GetRegistrarName() ?: $Blank),
+				($RegLabel ?: $Blank),
+				($CertLabel ?: $Blank)
+			]);
 
 			if(!$Reg->IsRegistered())
 			$Styles->Push(Console\Theme::Error);
@@ -429,19 +439,41 @@ extends Console\Client {
 			return;
 		});
 
-		$Table = Console\Elements\Table::New($this);
+		////////
+
+		$Summary = Console\Elements\ListNamed::New(
+			Client: $this,
+			Items: [
+				'REG' => (
+					($CountRegStatus)
+					->MapKeyValue(fn(string $Key, int $Val)=> sprintf('%s(%d)', $Key, $Val))
+					->Join(' ')
+				),
+				'SSL' => (
+					($CountCertStatus)
+					->MapKeyValue(fn(string $Key, int $Val)=> sprintf('%s(%d)', $Key, $Val))
+					->Join(' ')
+				)
+			]
+		);
+
+		$Summary->Print(2);
+
+		////////
+
+		$Table = Console\Elements\Table::New(Client: $this);
 		$Table->SetHeaders(...$Headers);
 		$Table->SetData($Rows->Export());
 		$Table->PrintHeaders();
 		$Table->PrintRows();
 		$Table->PrintFooter();
+
 		$this->PrintLn(sprintf(
-			'[ LEGEND: %s ]',
+			'[[[ LEGEND: %s ]]]',
 			$Legend
 			->MapKeyValue(fn($K, $V)=> $this->Format($K, C: $V))
 			->Join(', ')
-		));
-		$this->PrintLn();
+		), 2);
 
 		return;
 	}
@@ -521,6 +553,34 @@ extends Console\Client {
 		////////
 
 		return $Info;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	protected function
+	GetPharFiles():
+	Common\Datastore {
+
+		$Index = parent::GetPharFiles();
+
+		$Index->Push('core');
+
+		return $Index;
+	}
+
+	protected function
+	GetPharFileFilters():
+	Common\Datastore {
+
+		$Output = parent::GetPharFileFilters();
+
+		$Output->Push(fn(string $Path)=> !str_starts_with($Path, 'vendor/monolog'));
+		$Output->Push(fn(string $Path)=> !str_starts_with($Path, 'vendor/dealerdirect'));
+		$Output->Push(fn(string $Path)=> !str_starts_with($Path, 'vendor/fileeye'));
+		$Output->Push(fn(string $Path)=> !str_starts_with($Path, 'vendor/squizlabs'));
+
+		return $Output;
 	}
 
 };
