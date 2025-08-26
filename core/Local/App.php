@@ -369,13 +369,21 @@ extends Console\Client {
 
 		$RegSummary = (
 			($CountRegStatus)
-			->MapKeyValue(fn(string $Key, int $Val)=> sprintf('%s(%d)', $Key, $Val))
+			->MapKeyValue(fn(string $Key, int $Val)=> sprintf(
+				'%s(%d)',
+				Tools\RegistrationInfo::StatusWords[$Key],
+				$Val
+			))
 			->Join(' ')
 		);
 
 		$CertSummary = (
 			($CountCertStatus)
-			->MapKeyValue(fn(string $Key, int $Val)=> sprintf('%s(%d)', $Key, $Val))
+			->MapKeyValue(fn(string $Key, int $Val)=> sprintf(
+				'%s(%d)',
+				Tools\CertInfo::StatusWords[$Key],
+				$Val
+			))
 			->Join(' ')
 		);
 

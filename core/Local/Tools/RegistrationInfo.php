@@ -22,6 +22,7 @@ extends Common\Prototype {
 
 	const
 	StatusWords = [
+		self::StatusUnregistered   => 'UNREGISTERED',
 		self::StatusFailure        => 'ERROR',
 		self::StatusExpired        => 'EXPIRED',
 		self::StatusOK             => 'OK',
