@@ -411,13 +411,12 @@ extends Console\Client {
 	PrintTimerHeader():
 	void {
 
-		$Header = Console\Elements\H2::New(
+		Console\Elements\H2::New(
 			Client: $this,
 			Text: 'Done',
-			BorderColour: $this->FooterColour
+			BorderColour: $this->FooterColour,
+			Print: 2
 		);
-
-		$Header->Print(2);
 
 		return;
 	}
