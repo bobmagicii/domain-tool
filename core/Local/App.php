@@ -27,6 +27,19 @@ extends Console\Client {
 	CertModeOpenSSL = 'openssl',
 	CertModeCurl    = 'curl';
 
+	const
+	WordOK         = 'OK',
+	WordSoon       = 'Soon',
+	WordImminent   = 'Imminent',
+	WordExpired    = 'Expired',
+	WordError      = 'Error',
+	WordDefault    = 'Default',
+
+	WordDomain     = 'Domain',
+	WordRegistrar  = 'Registrar',
+	WordRegExpire  = 'Registration Expire',
+	WordCertExpire = 'SSL Cert Expire';
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
@@ -154,7 +167,7 @@ extends Console\Client {
 		////////
 
 		if(!$OptShort) {
-			$this->PrintCommandHeader('Domain Registration & SSL Certs');
+			$this->PrintReportCommandHeader('Domain Registration & SSL Certs');
 			$this->PrintFilesHeader($Files);
 			$this->PrintFilesReport($Files);
 		}
@@ -177,6 +190,299 @@ extends Console\Client {
 		}
 
 		return 0;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	protected function
+	RunDomainsReport(Common\Datastore $Domains):
+	void {
+
+		$Domains->RemapKeyValue(function(string $Domain) {
+
+			$Cert = Tools\CertInfo::FromNull($Domain);
+
+			$this->TimerReg->Start();
+			$Reg = $this->FetchRegistrationInfo($Domain);
+			$this->TimerReg->Stop();
+
+			if($Reg->IsRegistered()) {
+				$this->TimerCert->Start();
+				$Cert = $this->FetchCertInfo($Domain);
+				$this->TimerCert->Stop();
+			}
+
+			return [ $Reg, $Cert ];
+		});
+
+		return;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	#[Common\Meta\Info('Prints report command heading introduction.')]
+	protected function
+	PrintReportCommandHeader(string $Text):
+	void {
+
+		Console\Elements\H1::New(
+			Client: $this,
+			Text: $Text,
+			BorderColour: $this->BorderColour,
+			Print: 2
+		);
+
+		return;
+	}
+
+	#[Common\Meta\Info('Prints list of files heading.')]
+	protected function
+	PrintFilesHeader(?Common\Datastore $Files):
+	void {
+
+		if(!$Files || !$Files->Count())
+		return;
+
+		Console\Elements\H2::New(
+			Client: $this,
+			Text: sprintf('Files (%d)', $Files->Count()),
+			BorderColour: $this->BorderColour,
+			Print: 2
+		);
+
+		return;
+	}
+
+	#[Common\Meta\Info('Prints list of files read.')]
+	protected function
+	PrintFilesReport(?Common\Datastore $Files):
+	void {
+
+		if(!$Files || !$Files->Count())
+		return;
+
+		$List = Console\Elements\ListBullet::New(
+			Client: $this,
+			Items: $Files->Values()->Export(),
+			BulletColour: $this->BorderColour
+		);
+
+		$List->Print();
+
+		return;
+	}
+
+	#[Common\Meta\Info('Prints domain table heading.')]
+	protected function
+	PrintDomainsHeader(Common\Datastore $Domains):
+	void {
+
+		Console\Elements\H2::New(
+			Client: $this,
+			Text: sprintf('Domains (%d)', $Domains->Count()),
+			BorderColour: $this->BorderColour,
+			Print: 2
+		);
+
+		return;
+	}
+
+	#[Common\Meta\Info('Prints domain table report.')]
+	protected function
+	PrintDomainsReport(Common\Datastore $Domains):
+	void {
+
+		$Legend = new Common\Datastore([
+			static::WordOK       => '#55EE88',
+			static::WordSoon     => '#EEEE44',
+			static::WordImminent => '#EE9966',
+			static::WordExpired  => '#FF6666',
+			static::WordError    => '#AA66AA',
+			static::WordDefault  => NULL
+		]);
+
+		$Headers = new Common\Datastore([
+			str_repeat($this->GetBlankChar(), 2),
+			static::WordDomain,
+			static::WordRegistrar,
+			static::WordRegExpire,
+			static::WordCertExpire
+		]);
+
+		$Rows = new Common\Datastore;
+		$CountRegStatus = new Common\Datastore;
+		$CountCertStatus = new Common\Datastore;
+		$RegSummary = NULL;
+		$CertSummary = NULL;
+		$LegendSummary = NULL;
+
+		////////
+
+		$Domains->EachKeyValue(function(string $Domain, array $Data) use($Rows, $Legend, $CountRegStatus, $CountCertStatus) {
+
+			list($Reg, $Cert) = $Data;
+
+			/**
+			 * @var Tools\RegistrationInfo $Reg
+			 * @var Tools\CertInfo $Cert
+			 */
+
+			$RegCode = $Reg->GetStatusCode();
+			$RegStyle = $this->GetRegStatusStyle($RegCode, $Legend);
+			$RegLabel = $this->GetRegStatusLabel($RegCode, $Reg);
+			$CountRegStatus->Bump($RegCode, 1);
+
+			$CertCode = $Cert->GetStatusCode();
+			$CertStyle = $this->GetCertStatusStyle($CertCode, $Legend);
+			$CertLabel = $this->GetCertStatusLabel($CertCode, $Cert);
+			$CountCertStatus->Bump($CertCode, 1);
+
+			////////
+
+			if(!$Reg->IsRegistered())
+			$CertStyle = $Legend[static::WordDefault];
+
+			////////
+
+			$StatusLabel = sprintf(
+				'%s%s',
+				$this->Format($this->GetRegStatusChar($Reg->GetStatusCode()), C: $RegStyle),
+				$this->Format($this->GetCertStatusChar($Cert->GetStatusCode()), C: $CertStyle)
+			);
+
+			////////
+
+			$Rows->Push([
+				$StatusLabel,
+				($Reg->GetDomain()        ?: $this->GetBlankChar()),
+				($Reg->GetRegistrarName() ?: $this->GetBlankChar()),
+				($RegLabel                ?: $this->GetBlankChar()),
+				($CertLabel               ?: $this->GetBlankChar())
+			]);
+
+			return;
+		});
+
+		////////
+
+		$RegSummary = (
+			($CountRegStatus)
+			->MapKeyValue(fn(string $Key, int $Val)=> sprintf('%s(%d)', $Key, $Val))
+			->Join(' ')
+		);
+
+		$CertSummary = (
+			($CountCertStatus)
+			->MapKeyValue(fn(string $Key, int $Val)=> sprintf('%s(%d)', $Key, $Val))
+			->Join(' ')
+		);
+
+		$LegendSummary = sprintf(
+			'[[[ LEGEND: %s ]]]',
+			$Legend
+			->MapKeyValue(fn($K, $V)=> $this->Format($K, C: $V))
+			->Join(', ')
+		);
+
+		////////
+
+		Console\Elements\ListNamed::New(
+			Client: $this,
+			Items: [ 'REG'=> $RegSummary, 'SSL'=> $CertSummary ],
+			Print: 2
+		);
+
+		Console\Elements\Table::New(
+			Client: $this,
+			Headers: $Headers,
+			Rows: $Rows,
+			Print: 2
+		);
+
+		$this->PrintLn($LegendSummary, 2);
+
+		return;
+	}
+
+	#[Common\Meta\Info('Prints debugging timer header.')]
+	protected function
+	PrintTimerHeader():
+	void {
+
+		$Header = Console\Elements\H2::New(
+			Client: $this,
+			Text: 'Done',
+			BorderColour: $this->FooterColour
+		);
+
+		$Header->Print(2);
+
+		return;
+	}
+
+	#[Common\Meta\Info('Prints debuging timers.')]
+	protected function
+	PrintTimerReport():
+	void {
+
+		$TimerFmt = '%.2fsec';
+
+		$List = Console\Elements\ListNamed::New(
+			Client: $this,
+			Items: [
+				'Domains' => sprintf($TimerFmt, $this->TimerReg->Get()),
+				'Certs'   => sprintf($TimerFmt, $this->TimerCert->Get()),
+				'Total'   => sprintf($TimerFmt, $this->TimerTotal->Get())
+			],
+			BulletColour: $this->FooterColour
+		);
+
+		$List->Print(2);
+
+		return;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	protected function
+	FetchRegistrationInfo(string $Domain):
+	Tools\RegistrationInfo {
+
+		$Mode = $this->Config->Get(static::ConfRegMode);
+
+		////////
+
+		$Info = match($Mode) {
+			default => Tools\RegistrationInfo::FetchViaRDAP($Domain)
+		};
+
+		////////
+
+		return $Info;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	protected function
+	FetchCertInfo(string $Domain):
+	Tools\CertInfo {
+
+		$Mode = $this->Config->Get(static::ConfCertMode);
+
+		////////
+
+		$Info = match($Mode) {
+			static::CertModeCurl => Tools\CertInfo::FetchViaCurl($Domain),
+			default              => Tools\CertInfo::FetchViaOpenSSL($Domain)
+		};
+
+		////////
+
+		return $Info;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -250,309 +556,100 @@ extends Console\Client {
 		return $List;
 	}
 
-	////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////
-
 	protected function
-	RunDomainsReport(Common\Datastore $Domains):
-	void {
+	GetRegStatusChar(int $StatusCode):
+	string {
 
-		$Domains->RemapKeyValue(function(string $Domain) {
+		$Char = '█';
 
-			$Cert = Tools\CertInfo::FromNull($Domain);
-
-			$this->TimerReg->Start();
-			$Reg = $this->FetchRegistrationInfo($Domain);
-			$this->TimerReg->Stop();
-
-			if($Reg->IsRegistered()) {
-				$this->TimerCert->Start();
-				$Cert = $this->FetchCertInfo($Domain);
-				$this->TimerCert->Stop();
-			}
-
-			return [ $Reg, $Cert ];
-		});
-
-		return;
-	}
-
-	////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////
-
-	protected function
-	PrintCommandHeader(string $Text):
-	void {
-
-		$Header = Console\Elements\H1::New(
-			Client: $this,
-			Text: $Text,
-			BorderColour: $this->BorderColour
-		);
-
-		$Header->Print(2);
-
-		return;
+		return $Char;
 	}
 
 	protected function
-	PrintFilesHeader(?Common\Datastore $Files):
-	void {
+	GetRegStatusLabel(int $StatusCode, Tools\RegistrationInfo $Reg):
+	string {
 
-		if(!$Files || !$Files->Count())
-		return;
-
-		$Header = Console\Elements\H2::New(
-			Client: $this,
-			Text: sprintf('Files (%d)', $Files->Count()),
-			BorderColour: $this->BorderColour
-		);
-
-		$Header->Print(2);
-
-		return;
-	}
-
-	protected function
-	PrintFilesReport(?Common\Datastore $Files):
-	void {
-
-		if(!$Files || !$Files->Count())
-		return;
-
-		$List = Console\Elements\ListBullet::New(
-			Client: $this,
-			Items: $Files->Values()->Export(),
-			BulletColour: $this->BorderColour
-		);
-
-		$List->Print();
-
-		return;
-	}
-
-	protected function
-	PrintDomainsHeader(Common\Datastore $Domains):
-	void {
-
-		$Header = Console\Elements\H2::New(
-			Client: $this,
-			Text: sprintf('Domains (%d)', $Domains->Count()),
-			BorderColour: $this->BorderColour
-		);
-
-		$Header->Print(2);
-
-		return;
-	}
-
-	protected function
-	PrintDomainsReport(Common\Datastore $Domains):
-	void {
-
-		$Block = '█';
-		$Blank = '-';
-		$Headers = [ str_repeat($Block, 2), 'Domain', 'Registrar', 'Registration Expire', 'SSL Cert Expire' ];
-		$Rows = new Common\Datastore;
-		$Styles = new Common\Datastore;
-		$CountRegStatus = new Common\Datastore;
-		$CountCertStatus = new Common\Datastore;
-
-		$Legend = new Common\Datastore([
-			'OK'       => '#55EE88',
-			'Soon'     => '#EEEE44',
-			'Imminent' => '#EE9966',
-			'Expired'  => '#FF6666',
-			'Error'    => '#AA66AA',
-			'Default'  => NULL,
-		]);
-
-		$Domains->EachKeyValue(function(string $Domain, array $Data) use($Rows, $Styles, $Legend, $Block, $Blank, $CountRegStatus, $CountCertStatus) {
-
-			list($Reg, $Cert) = $Data;
-
-			/**
-			 * @var Tools\RegistrationInfo $Reg
-			 * @var Tools\CertInfo $Cert
-			 */
-
-			$RegStyle = match($Reg->GetStatusCode()) {
-				$Reg::StatusFailure       => $Legend['Error'],
-				$Reg::StatusOK            => $Legend['OK'],
-				$Reg::StatusExpireWarning => $Legend['Imminent'],
-				$Reg::StatusExpireSoon    => $Legend['Soon'],
-				$Reg::StatusExpired       => $Legend['Expired'],
-				default                   => $Legend['Default']
-			};
-
-			$RegLabel = match($Reg->GetStatusCode()) {
-				$Reg::StatusFailure       => '',
-				$Reg::StatusUnregistered  => '',
-				default                   => sprintf('%s (%s)', $Reg->GetDateExpire(), $Reg->GetExpireTimeframe())
-			};
-
-			////////
-
-			$CertStyle = match($Cert->GetStatusCode()) {
-				$Cert::StatusFailure       => $Legend['Error'],
-				$Cert::StatusOK            => $Legend['OK'],
-				$Cert::StatusExpireWarning => $Legend['Imminent'],
-				$Cert::StatusExpireSoon    => $Legend['Soon'],
-				$Cert::StatusExpired       => $Legend['Expired'],
-				default                    => $Legend['Default']
-			};
-
-			if(!$Reg->IsRegistered())
-			$CertStyle = $Legend['Default'];
-
-			$CertLabel = match($Cert->GetStatusCode()) {
-				$Cert::StatusFailure       => '',
-				default                    => sprintf('%s (%s)', $Cert->GetDateExpire(), $Cert->GetExpireTimeframe())
-			};
-
-			////////
-
-			$CountRegStatus->Bump($Reg->GetStatusWord(), 1);
-			$CountCertStatus->Bump($Cert->GetStatusWord(), 1);
-
-			$StatusFlags = sprintf(
-				'%s%s',
-				$this->Format($Block, C: $RegStyle),
-				$this->Format($Block, C: $CertStyle)
-			);
-
-			////////
-
-			$Rows->Push([
-				$StatusFlags,
-				($Reg->GetDomain() ?: $Blank),
-				($Reg->GetRegistrarName() ?: $Blank),
-				($RegLabel ?: $Blank),
-				($CertLabel ?: $Blank)
-			]);
-
-			if(!$Reg->IsRegistered())
-			$Styles->Push(Console\Theme::Error);
-			else
-			$Styles->Push(Console\Theme::Default);
-
-			return;
-		});
-
-		////////
-
-		$Summary = Console\Elements\ListNamed::New(
-			Client: $this,
-			Items: [
-				'REG' => (
-					($CountRegStatus)
-					->MapKeyValue(fn(string $Key, int $Val)=> sprintf('%s(%d)', $Key, $Val))
-					->Join(' ')
-				),
-				'SSL' => (
-					($CountCertStatus)
-					->MapKeyValue(fn(string $Key, int $Val)=> sprintf('%s(%d)', $Key, $Val))
-					->Join(' ')
-				)
-			]
-		);
-
-		$Summary->Print(2);
-
-		////////
-
-		$Table = Console\Elements\Table::New(Client: $this);
-		$Table->SetHeaders(...$Headers);
-		$Table->SetData($Rows->Export());
-		$Table->PrintHeaders();
-		$Table->PrintRows();
-		$Table->PrintFooter();
-
-		$this->PrintLn(sprintf(
-			'[[[ LEGEND: %s ]]]',
-			$Legend
-			->MapKeyValue(fn($K, $V)=> $this->Format($K, C: $V))
-			->Join(', ')
-		), 2);
-
-		return;
-	}
-
-	protected function
-	PrintTimerHeader():
-	void {
-
-		$Header = Console\Elements\H2::New(
-			Client: $this,
-			Text: 'Done',
-			BorderColour: $this->FooterColour
-		);
-
-		$Header->Print(2);
-
-		return;
-	}
-
-	protected function
-	PrintTimerReport():
-	void {
-
-		$TimerFmt = '%.2fsec';
-
-		$List = Console\Elements\ListNamed::New(
-			Client: $this,
-			Items: [
-				'Domains' => sprintf($TimerFmt, $this->TimerReg->Get()),
-				'Certs'   => sprintf($TimerFmt, $this->TimerCert->Get()),
-				'Total'   => sprintf($TimerFmt, $this->TimerTotal->Get())
-			],
-			BulletColour: $this->FooterColour
-		);
-
-		$List->Print(2);
-
-		return;
-	}
-
-	////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////
-
-	protected function
-	FetchRegistrationInfo(string $Domain):
-	Tools\RegistrationInfo {
-
-		$Mode = $this->Config->Get(static::ConfRegMode);
-
-		////////
-
-		$Info = match($Mode) {
-			default => Tools\RegistrationInfo::FetchViaRDAP($Domain)
+		return match($StatusCode) {
+			$Reg::StatusFailure       => '',
+			$Reg::StatusUnregistered  => '',
+			default                   => sprintf('%s (%s)', $Reg->GetDateExpire(), $Reg->GetExpireTimeframe())
 		};
-
-		////////
-
-		return $Info;
 	}
 
-	////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////
+	protected function
+	GetRegStatusStyle(int $StatusCode, Common\Datastore $Legend):
+	string {
+
+		return match($StatusCode) {
+			Tools\RegistrationInfo::StatusFailure
+			=> $Legend[static::WordError],
+
+			Tools\RegistrationInfo::StatusOK
+			=> $Legend[static::WordOK],
+
+			Tools\RegistrationInfo::StatusExpireWarning
+			=> $Legend[static::WordImminent],
+
+			Tools\RegistrationInfo::StatusExpireSoon
+			=> $Legend[static::WordSoon],
+
+			Tools\RegistrationInfo::StatusExpired
+			=> $Legend[static::WordExpired],
+
+			default
+			=> $Legend[static::WordDefault]
+		};
+	}
 
 	protected function
-	FetchCertInfo(string $Domain):
-	Tools\CertInfo {
+	GetCertStatusChar(int $StatusCode):
+	string {
 
-		$Mode = $this->Config->Get(static::ConfCertMode);
+		$Char = '█';
 
-		////////
+		return $Char;
+	}
 
-		$Info = match($Mode) {
-			static::CertModeCurl => Tools\CertInfo::FetchViaCurl($Domain),
-			default              => Tools\CertInfo::FetchViaOpenSSL($Domain)
+	protected function
+	GetCertStatusLabel(int $StatusCode, Tools\CertInfo $Cert):
+	string {
+
+		return match($StatusCode) {
+			$Cert::StatusFailure       => '',
+			default                    => sprintf('%s (%s)', $Cert->GetDateExpire(), $Cert->GetExpireTimeframe())
 		};
+	}
 
-		////////
+	protected function
+	GetCertStatusStyle(int $StatusCode, Common\Datastore $Legend):
+	string {
 
-		return $Info;
+		return match($StatusCode) {
+			Tools\CertInfo::StatusFailure
+			=> $Legend[static::WordError],
+
+			Tools\CertInfo::StatusOK
+			=> $Legend[static::WordOK],
+
+			Tools\CertInfo::StatusExpireWarning
+			=> $Legend[static::WordImminent],
+
+			Tools\CertInfo::StatusExpireSoon
+			=> $Legend[static::WordSoon],
+
+			Tools\CertInfo::StatusExpired
+			=> $Legend[static::WordExpired],
+
+			default
+			=> $Legend[static::WordDefault]
+		};
+	}
+
+	protected function
+	GetBlankChar():
+	string {
+
+		return '-';
 	}
 
 	////////////////////////////////////////////////////////////////

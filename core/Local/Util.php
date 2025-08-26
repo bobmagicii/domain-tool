@@ -35,4 +35,14 @@ class Util {
 		return $Stripped;
 	}
 
+	#[Common\Meta\Date('2025-08-25')]
+	static public function
+	Word(string $Input):
+	string {
+
+		// in the future, this would translate the words.
+
+		return $Input;
+	}
+
 };
