@@ -585,7 +585,7 @@ extends Console\Client {
 
 	protected function
 	GetRegStatusStyle(int $StatusCode, Common\Datastore $Legend):
-	string {
+	?string {
 
 		return match($StatusCode) {
 			Tools\RegistrationInfo::StatusFailure
@@ -629,7 +629,7 @@ extends Console\Client {
 
 	protected function
 	GetCertStatusStyle(int $StatusCode, Common\Datastore $Legend):
-	string {
+	?string {
 
 		return match($StatusCode) {
 			Tools\CertInfo::StatusFailure
