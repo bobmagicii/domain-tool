@@ -5,6 +5,7 @@ namespace Local;
 
 use Nether\Common;
 use Nether\Console;
+use Nether\Database;
 use Nether\Dye;
 
 use Exception;
@@ -17,8 +18,9 @@ class App
 extends Console\Client {
 
 	const
-	ConfRegMode  = 'Reg.Mode',
-	ConfCertMode = 'Cert.Mode';
+	DomainDB          = 'Reg.DB.File',
+	ConfRegMode       = 'Reg.Mode',
+	ConfCertMode      = 'Cert.Mode';
 
 	const
 	RegModeRDAP     = 'rdap';
@@ -49,6 +51,9 @@ extends Console\Client {
 	protected Common\Datastore
 	$Library;
 
+	protected string
+	$AppRoot;
+
 	public ?Dye\Colour
 	$BorderColour;
 
@@ -67,6 +72,9 @@ extends Console\Client {
 	private Common\Timer
 	$TimerTotal;
 
+	private DB
+	$DB;
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
@@ -74,6 +82,7 @@ extends Console\Client {
 	OnPrepare():
 	void {
 
+		$this->AppRoot = $this->GetOption('AppRoot');
 		$this->TimerTotal = Common\Timer::New(Start: TRUE);
 		$this->TimerReg = Common\Timer::New();
 		$this->TimerCert = Common\Timer::New();
@@ -90,6 +99,7 @@ extends Console\Client {
 	void {
 
 		$this->Config = new Common\Datastore([
+			static::DomainDB     => Common\Filesystem\Util::Pathify($this->AppRoot, 'domains.sqlite'),
 			static::ConfRegMode  => static::RegModeRDAP,
 			static::ConfCertMode => static::CertModeOpenSSL
 		]);
@@ -116,6 +126,18 @@ extends Console\Client {
 
 		$this->Library = new Common\Datastore;
 		$this->Library['Common'] = new Common\Library($this->Config);
+		$this->Library['Database'] = new Database\Library($this->Config);
+
+		return;
+	}
+
+	protected function
+	OnReady():
+	void {
+
+		// open the sqlite datbaase
+
+		$this->DB = DB::Touch($this->Config->Get(static::DomainDB));
 
 		return;
 	}
@@ -133,9 +155,12 @@ extends Console\Client {
 	HandleDomains():
 	int {
 
-		$OptSort = $this->GetOption('sort');
-		$OptFiles = $this->GetOption('files');
+		$OptSort = $this->GetOption('sort') ?: FALSE;
+		$OptFiles = $this->GetOption('files') ?: FALSE;
 		$OptShort = $this->GetOption('short') ?: FALSE;
+		$OptCertMode = $this->GetOption('certmode') ?: $this->Config->Get(static::ConfCertMode);
+		$OptVerbose = $this->GetOption('verbose') ?: FALSE;
+		$OptLogToDB = $this->GetOption('db') ?: FALSE;
 
 		$Domains = NULL;
 		$Files = NULL;
@@ -162,9 +187,14 @@ extends Console\Client {
 
 		////////
 
-		$this->RunDomainsReport($Domains);
+		$this->RunDomainsReport($Domains, $OptLogToDB);
 
 		////////
+
+		if($OptVerbose) {
+			$this->PrintConfigHeader();
+			$this->PrintConfigReport();
+		}
 
 		if(!$OptShort) {
 			$this->PrintReportCommandHeader('Domain Registration & SSL Certs');
@@ -196,12 +226,13 @@ extends Console\Client {
 	////////////////////////////////////////////////////////////////
 
 	protected function
-	RunDomainsReport(Common\Datastore $Domains):
+	RunDomainsReport(Common\Datastore $Domains, bool $LogToDB=FALSE):
 	void {
 
-		$Domains->RemapKeyValue(function(string $Domain) {
+		$Domains->RemapKeyValue(function(string $Domain) use($LogToDB) {
 
 			$Cert = Tools\CertInfo::FromNull($Domain);
+			$Now = Common\Date::Unixtime();
 
 			$this->TimerReg->Start();
 			$Reg = $this->FetchRegistrationInfo($Domain);
@@ -212,6 +243,30 @@ extends Console\Client {
 				$Cert = $this->FetchCertInfo($Domain);
 				$this->TimerCert->Stop();
 			}
+
+			////////
+
+			if($LogToDB) {
+				$Old = DB\Domain::GetByField('Domain', $Domain);
+
+				if($Old) $Old->Update([
+					'Registrar'      => $Reg->Registrar,
+					'TimeLogged'     => $Now,
+					'TimeRegExpire'  => $Reg->GetTimeExpire(),
+					'TimeCertExpire' => $Cert->GetTimeExpire()
+				]);
+
+				else DB\Domain::Insert([
+					'UUID'           => Common\UUID::V7(),
+					'Domain'         => $Domain,
+					'Registrar'      => $Reg->Registrar,
+					'TimeLogged'     => $Now,
+					'TimeRegExpire'  => $Reg->GetTimeExpire(),
+					'TimeCertExpire' => $Cert->GetTimeExpire()
+				]);
+			}
+
+			////////
 
 			return [ $Reg, $Cert ];
 		});
@@ -231,6 +286,37 @@ extends Console\Client {
 			Client: $this,
 			Text: $Text,
 			BorderColour: $this->BorderColour,
+			Print: 2
+		);
+
+		return;
+	}
+
+	#[Common\Meta\Info('Print config report header.')]
+	protected function
+	PrintConfigHeader():
+	void {
+
+		Console\Elements\H2::New(
+			Client: $this,
+			Text: 'Configuration',
+			BorderColour: $this->BorderColour,
+			Print: 2
+		);
+
+		return;
+	}
+
+	protected function
+	PrintConfigReport():
+	void {
+
+		Console\Elements\ListNamed::New(
+			$this,
+			Items: [
+				'RegMode' => $this->Config->Get(static::ConfRegMode),
+				'CertMode' => $this->Config->Get(static::ConfCertMode)
+			],
 			Print: 2
 		);
 
@@ -475,10 +561,10 @@ extends Console\Client {
 	////////////////////////////////////////////////////////////////
 
 	protected function
-	FetchCertInfo(string $Domain):
+	FetchCertInfo(string $Domain, ?string $Mode=NULL):
 	Tools\CertInfo {
 
-		$Mode = $this->Config->Get(static::ConfCertMode);
+		$Mode ??= $this->Config->Get(static::ConfCertMode);
 
 		////////
 

@@ -92,6 +92,26 @@ extends Common\Prototype {
 	}
 
 	public function
+	GetTimeStart():
+	int {
+
+		if(!$this->DateStart)
+		return 0;
+
+		return $this->DateStart->GetUnixtime();
+	}
+
+	public function
+	GetTimeExpire():
+	int {
+
+		if(!$this->DateExpire)
+		return 0;
+
+		return $this->DateExpire->GetUnixtime();
+	}
+
+	public function
 	GetStatusCode():
 	int {
 

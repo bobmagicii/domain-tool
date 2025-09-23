@@ -4,29 +4,29 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "84d417037f3fed9912ef0b0fee6c5812",
+    "content-hash": "59bc9d095657e158118a7f98b00cc399",
     "packages": [
         {
             "name": "brick/math",
-            "version": "0.13.1",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "fc7ed316430118cc7836bf45faff18d5dfc8de04"
+                "reference": "113a8ee2656b882d4c3164fa31aa6e12cbb7aaa2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/fc7ed316430118cc7836bf45faff18d5dfc8de04",
-                "reference": "fc7ed316430118cc7836bf45faff18d5dfc8de04",
+                "url": "https://api.github.com/repos/brick/math/zipball/113a8ee2656b882d4c3164fa31aa6e12cbb7aaa2",
+                "reference": "113a8ee2656b882d4c3164fa31aa6e12cbb7aaa2",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.1"
+                "php": "^8.2"
             },
             "require-dev": {
                 "php-coveralls/php-coveralls": "^2.2",
-                "phpunit/phpunit": "^10.1",
-                "vimeo/psalm": "6.8.8"
+                "phpstan/phpstan": "2.1.22",
+                "phpunit/phpunit": "^11.5"
             },
             "type": "library",
             "autoload": {
@@ -56,7 +56,7 @@
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.13.1"
+                "source": "https://github.com/brick/math/tree/0.14.0"
             },
             "funding": [
                 {
@@ -64,7 +64,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-03-29T13:50:30+00:00"
+            "time": "2025-08-29T12:40:03+00:00"
         },
         {
             "name": "fileeye/mimemap",
@@ -233,12 +233,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/netherphp/common.git",
-                "reference": "2cb27ac6e4c8fe9cf89ca524e96b08ffd907d65d"
+                "reference": "2ffd61a8b5c515d604194a5eeb96fb4301ed34bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/netherphp/common/zipball/2cb27ac6e4c8fe9cf89ca524e96b08ffd907d65d",
-                "reference": "2cb27ac6e4c8fe9cf89ca524e96b08ffd907d65d",
+                "url": "https://api.github.com/repos/netherphp/common/zipball/2ffd61a8b5c515d604194a5eeb96fb4301ed34bf",
+                "reference": "2ffd61a8b5c515d604194a5eeb96fb4301ed34bf",
                 "shasum": ""
             },
             "require": {
@@ -281,7 +281,7 @@
                 "issues": "https://github.com/netherphp/common/issues",
                 "source": "https://github.com/netherphp/common/tree/master"
             },
-            "time": "2025-08-25T20:02:04+00:00"
+            "time": "2025-09-23T01:46:04+00:00"
         },
         {
             "name": "netherphp/console",
@@ -289,12 +289,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/netherphp/console.git",
-                "reference": "3264f758e01f3ea7d6f13537ee72a70dfc818081"
+                "reference": "8f216f6f48cf7accda5aa12c65dbd3f5c9697572"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/netherphp/console/zipball/3264f758e01f3ea7d6f13537ee72a70dfc818081",
-                "reference": "3264f758e01f3ea7d6f13537ee72a70dfc818081",
+                "url": "https://api.github.com/repos/netherphp/console/zipball/8f216f6f48cf7accda5aa12c65dbd3f5c9697572",
+                "reference": "8f216f6f48cf7accda5aa12c65dbd3f5c9697572",
                 "shasum": ""
             },
             "require": {
@@ -340,7 +340,66 @@
                 "issues": "https://github.com/netherphp/console/issues",
                 "source": "https://github.com/netherphp/console/tree/redux"
             },
-            "time": "2025-08-26T02:07:52+00:00"
+            "time": "2025-09-21T20:31:00+00:00"
+        },
+        {
+            "name": "netherphp/database",
+            "version": "dev-redux",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/netherphp/database.git",
+                "reference": "59274ee82a85ab1403114f517bea2c3d6c5da725"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/netherphp/database/zipball/59274ee82a85ab1403114f517bea2c3d6c5da725",
+                "reference": "59274ee82a85ab1403114f517bea2c3d6c5da725",
+                "shasum": ""
+            },
+            "require": {
+                "netherphp/common": "dev-master",
+                "netherphp/console": "dev-redux",
+                "phelium/mysql-backup": "^1.1.0",
+                "php": ">=8.1.0"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^0.7.2",
+                "netherphp/standards": "^0.2.8",
+                "phpunit/phpunit": "^9.5.28",
+                "squizlabs/php_codesniffer": "^3.7.1"
+            },
+            "default-branch": true,
+            "bin": [
+                "bin/ndb"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Nether\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-2-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Bob Majdak Jr",
+                    "email": "bob@pegasusgate.net",
+                    "homepage": "http://pegasusgate.net/+bob",
+                    "role": "developer"
+                }
+            ],
+            "description": "A database connection and query tool.",
+            "keywords": [
+                "database",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/netherphp/database/issues",
+                "source": "https://github.com/netherphp/database/tree/redux"
+            },
+            "time": "2025-09-23T03:18:49+00:00"
         },
         {
             "name": "netherphp/dye",
@@ -393,6 +452,53 @@
                 "source": "https://github.com/netherphp/dye/tree/master"
             },
             "time": "2024-06-18T23:47:56+00:00"
+        },
+        {
+            "name": "phelium/mysql-backup",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/shevabam/mysql-backup.git",
+                "reference": "7453ca9ee1032bc1b4ba99d7295d49be62bbc4cd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/shevabam/mysql-backup/zipball/7453ca9ee1032bc1b4ba99d7295d49be62bbc4cd",
+                "reference": "7453ca9ee1032bc1b4ba99d7295d49be62bbc4cd",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Phelium\\Component\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-only"
+            ],
+            "authors": [
+                {
+                    "name": "ShevAbam",
+                    "email": "me@shevarezo.fr"
+                }
+            ],
+            "description": "Backup easily your MySQL database !",
+            "homepage": "https://github.com/shevabam/mysql-backup",
+            "keywords": [
+                "backup",
+                "database",
+                "dump",
+                "mysql"
+            ],
+            "support": {
+                "issues": "https://github.com/shevabam/mysql-backup/issues",
+                "source": "https://github.com/shevabam/mysql-backup/tree/master"
+            },
+            "time": "2023-02-04T20:46:08+00:00"
         },
         {
             "name": "psr/log",
@@ -522,20 +628,20 @@
         },
         {
             "name": "ramsey/uuid",
-            "version": "4.9.0",
+            "version": "4.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ramsey/uuid.git",
-                "reference": "4e0e23cc785f0724a0e838279a9eb03f28b092a0"
+                "reference": "81f941f6f729b1e3ceea61d9d014f8b6c6800440"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ramsey/uuid/zipball/4e0e23cc785f0724a0e838279a9eb03f28b092a0",
-                "reference": "4e0e23cc785f0724a0e838279a9eb03f28b092a0",
+                "url": "https://api.github.com/repos/ramsey/uuid/zipball/81f941f6f729b1e3ceea61d9d014f8b6c6800440",
+                "reference": "81f941f6f729b1e3ceea61d9d014f8b6c6800440",
                 "shasum": ""
             },
             "require": {
-                "brick/math": "^0.8.8 || ^0.9 || ^0.10 || ^0.11 || ^0.12 || ^0.13",
+                "brick/math": "^0.8.8 || ^0.9 || ^0.10 || ^0.11 || ^0.12 || ^0.13 || ^0.14",
                 "php": "^8.0",
                 "ramsey/collection": "^1.2 || ^2.0"
             },
@@ -594,9 +700,9 @@
             ],
             "support": {
                 "issues": "https://github.com/ramsey/uuid/issues",
-                "source": "https://github.com/ramsey/uuid/tree/4.9.0"
+                "source": "https://github.com/ramsey/uuid/tree/4.9.1"
             },
-            "time": "2025-06-25T14:20:11+00:00"
+            "time": "2025-09-04T20:59:21+00:00"
         }
     ],
     "packages-dev": [
@@ -747,16 +853,16 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.13.2",
+            "version": "3.13.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPCSStandards/PHP_CodeSniffer.git",
-                "reference": "5b5e3821314f947dd040c70f7992a64eac89025c"
+                "reference": "ad545ea9c1b7d270ce0fc9cbfb884161cd706119"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/5b5e3821314f947dd040c70f7992a64eac89025c",
-                "reference": "5b5e3821314f947dd040c70f7992a64eac89025c",
+                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/ad545ea9c1b7d270ce0fc9cbfb884161cd706119",
+                "reference": "ad545ea9c1b7d270ce0fc9cbfb884161cd706119",
                 "shasum": ""
             },
             "require": {
@@ -827,13 +933,14 @@
                     "type": "thanks_dev"
                 }
             ],
-            "time": "2025-06-17T22:17:01+00:00"
+            "time": "2025-09-05T05:47:09+00:00"
         }
     ],
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "netherphp/console": 20
+        "netherphp/console": 20,
+        "netherphp/database": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

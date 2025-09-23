@@ -2,6 +2,7 @@
 .vendex
 .DS_Store
 
+/domains.sqlite
 /env.lock
 /backups
 /build

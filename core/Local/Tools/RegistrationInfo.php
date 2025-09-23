@@ -113,6 +113,36 @@ extends Common\Prototype {
 	}
 
 	public function
+	GetTimeRegister():
+	int {
+
+		if(!$this->DateRegister)
+		return 0;
+
+		return $this->DateRegister->GetUnixtime();
+	}
+
+	public function
+	GetTimeUpdate():
+	int {
+
+		if(!$this->DateUpdate)
+		return 0;
+
+		return $this->DateUpdate->GetUnixtime();
+	}
+
+	public function
+	GetTimeExpire():
+	int {
+
+		if(!$this->DateExpire)
+		return 0;
+
+		return $this->DateExpire->GetUnixtime();
+	}
+
+	public function
 	GetDomain():
 	string {
 
