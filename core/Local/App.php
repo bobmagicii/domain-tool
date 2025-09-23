@@ -150,17 +150,20 @@ extends Console\Client {
 	#[Console\Meta\Arg('...')]
 	#[Console\Meta\Toggle('--files', 'Arguments are paths to files of domains, one on each line.')]
 	#[Console\Meta\Toggle('--sort', 'Sort report by domain name.')]
-	#[Console\Meta\Toggle('--short', 'Only show the domain report table.')]
+	#[Console\Meta\Toggle('--db', 'Store results in SQLite database.')]
+	#[Console\Meta\Toggle('--short', 'Only print domain table to terminal.')]
+	#[Console\Meta\Toggle('--quiet', 'No output printed to terminal.')]
 	public function
 	HandleDomains():
 	int {
 
 		$OptSort = $this->GetOption('sort') ?: FALSE;
 		$OptFiles = $this->GetOption('files') ?: FALSE;
-		$OptShort = $this->GetOption('short') ?: FALSE;
 		$OptCertMode = $this->GetOption('certmode') ?: $this->Config->Get(static::ConfCertMode);
-		$OptVerbose = $this->GetOption('verbose') ?: FALSE;
 		$OptLogToDB = $this->GetOption('db') ?: FALSE;
+		$OptShort = $this->GetOption('short') ?: FALSE;
+		$OptVerbose = $this->GetOption('verbose') ?: FALSE;
+		$OptQuiet = $this->GetOption('quiet') ?: FALSE;
 
 		$Domains = NULL;
 		$Files = NULL;
@@ -191,12 +194,12 @@ extends Console\Client {
 
 		////////
 
-		if($OptVerbose) {
+		if($OptVerbose && !$OptQuiet) {
 			$this->PrintConfigHeader();
 			$this->PrintConfigReport();
 		}
 
-		if(!$OptShort) {
+		if(!$OptShort && !$OptQuiet) {
 			$this->PrintReportCommandHeader('Domain Registration & SSL Certs');
 			$this->PrintFilesHeader($Files);
 			$this->PrintFilesReport($Files);
@@ -205,15 +208,16 @@ extends Console\Client {
 		////////
 
 		if($Domains->Count()) {
-			if(!$OptShort)
+			if(!$OptShort && !$OptQuiet)
 			$this->PrintDomainsHeader($Domains);
 
+			if(!$OptQuiet)
 			$this->PrintDomainsReport($Domains);
 		}
 
 		////////
 
-		if(!$OptShort) {
+		if(!$OptShort && !$OptQuiet) {
 			$this->TimerTotal->Stop();
 			$this->PrintTimerHeader();
 			$this->PrintTimerReport();
