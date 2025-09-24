@@ -57,7 +57,7 @@ extends Common\Prototype {
 
 		$Is = (TRUE
 			&& ($this->Registrar !== NULL)
-			&& ($this->DateRegister !== NULL)
+			&& ($this->DateRegister !== NULL && $this->DateRegister->GetUnixtime() !== 0)
 		);
 
 		return $Is;
@@ -153,10 +153,10 @@ extends Common\Prototype {
 	GetStatusCode():
 	int {
 
-		if(!$this->Registrar && !$this->DateExpire)
+		if(!$this->IsRegistered())
 		return static::StatusUnregistered;
 
-		if(!$this->DateExpire)
+		if($this->DateExpire->GetUnixtime() === 0)
 		return static::StatusFailure;
 
 		$Diff = $this->GetExpireTimeframe();
@@ -234,10 +234,25 @@ extends Common\Prototype {
 
 		$Output = new static([
 			'Domain'       => $Domain,
-			'Registrar'    => $Data->FindRegistrarName(),
+			'Registrar'    => $Data->FindRegistrarName() ?: NULL,
 			'DateRegister' => $Data->FindRegistrationDate(),
 			'DateExpire'   => $Data->FindExpirationDate(),
 			'DateUpdate'   => $Data->FindUpdatedDate()
+		]);
+
+		return $Output;
+	}
+
+	static public function
+	FromDB(Local\DB\Domain $Row):
+	static {
+
+		$Output = new static([
+			'Domain'       => $Row->Domain,
+			'Registrar'    => $Row->Registrar ?: NULL,
+			'DateRegister' => Common\Date::FromTime($Row->TimeRegRegister),
+			'DateExpire'   => Common\Date::FromTime($Row->TimeRegExpire),
+			'DateUpdate'   => Common\Date::FromTime($Row->TimeRegUpdate)
 		]);
 
 		return $Output;

@@ -27,7 +27,9 @@ extends Common\Prototype {
 			Domain TEXT,
 			Registrar TEXT,
 			TimeLogged INTEGER,
+			TimeRegRegister INTEGER,
 			TimeRegExpire INTEGER,
+			TimeRegUpdate INTEGER,
 			TimeCertExpire INTEGER
 		);
 		SQL

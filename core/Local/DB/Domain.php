@@ -4,6 +4,7 @@
 namespace Local\DB;
 
 use Local;
+use Nether\Common;
 use Nether\Database;
 
 ################################################################################
@@ -28,7 +29,7 @@ extends Database\Prototype {
 	$Domain;
 
 	#[Database\Meta\TypeVarChar]
-	public string
+	public ?string
 	$Registrar;
 
 	#[Database\Meta\TypeIntBig(Unsigned: TRUE)]
@@ -37,10 +38,36 @@ extends Database\Prototype {
 
 	#[Database\Meta\TypeIntBig(Unsigned: TRUE)]
 	public int
+	$TimeRegRegister;
+
+	#[Database\Meta\TypeIntBig(Unsigned: TRUE)]
+	public int
 	$TimeRegExpire;
 
 	#[Database\Meta\TypeIntBig(Unsigned: TRUE)]
 	public int
+	$TimeRegUpdate;
+
+	#[Database\Meta\TypeIntBig(Unsigned: TRUE)]
+	public int
 	$TimeCertExpire;
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	public function
+	WasRecentlyLogged(int $TimeWindow=Common\Values::SecPerDay):
+	bool {
+
+		$Now = Common\Date::Unixtime();
+		$Diff = $Now - $this->TimeLogged;
+
+		////////
+
+		if($Diff < $TimeWindow)
+		return TRUE;
+
+		return FALSE;
+	}
 
 };

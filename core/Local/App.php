@@ -99,7 +99,7 @@ extends Console\Client {
 	void {
 
 		$this->Config = new Common\Datastore([
-			static::DomainDB     => Common\Filesystem\Util::Pathify($this->AppRoot, 'domains.sqlite'),
+			static::DomainDB     => Common\Filesystem\Util::Pathify($this->AppRoot, 'domain.sqlite'),
 			static::ConfRegMode  => static::RegModeRDAP,
 			static::ConfCertMode => static::CertModeOpenSSL
 		]);
@@ -135,8 +135,11 @@ extends Console\Client {
 	OnReady():
 	void {
 
+		$OptDB = $this->GetOption('db') ?: FALSE;
+
 		// open the sqlite datbaase
 
+		//if($OptDB)
 		$this->DB = DB::Touch($this->Config->Get(static::DomainDB));
 
 		return;
@@ -250,25 +253,29 @@ extends Console\Client {
 
 			////////
 
-			if($LogToDB) {
+			//if($LogToDB) {
 				$Old = DB\Domain::GetByField('Domain', $Domain);
 
 				if($Old) $Old->Update([
-					'Registrar'      => $Reg->Registrar,
-					'TimeLogged'     => $Now,
-					'TimeRegExpire'  => $Reg->GetTimeExpire(),
-					'TimeCertExpire' => $Cert->GetTimeExpire()
+					'Registrar'       => $Reg->Registrar,
+					'TimeLogged'      => $Now,
+					'TimeRegRegister' => $Reg->GetTimeRegister(),
+					'TimeRegExpire'   => $Reg->GetTimeExpire(),
+					'TimeRegUpdate'   => $Reg->GetTimeUpdate(),
+					'TimeCertExpire'  => $Cert->GetTimeExpire()
 				]);
 
 				else DB\Domain::Insert([
-					'UUID'           => Common\UUID::V7(),
-					'Domain'         => $Domain,
-					'Registrar'      => $Reg->Registrar,
-					'TimeLogged'     => $Now,
-					'TimeRegExpire'  => $Reg->GetTimeExpire(),
-					'TimeCertExpire' => $Cert->GetTimeExpire()
+					'UUID'            => Common\UUID::V7(),
+					'Domain'          => $Domain,
+					'Registrar'       => $Reg->Registrar,
+					'TimeLogged'      => $Now,
+					'TimeRegRegister' => $Reg->GetTimeRegister(),
+					'TimeRegExpire'   => $Reg->GetTimeExpire(),
+					'TimeRegUpdate'   => $Reg->GetTimeUpdate(),
+					'TimeCertExpire'  => $Cert->GetTimeExpire()
 				]);
-			}
+			//}
 
 			////////
 
@@ -549,6 +556,17 @@ extends Console\Client {
 	Tools\RegistrationInfo {
 
 		$Mode = $this->Config->Get(static::ConfRegMode);
+
+		////////
+
+		// check if we have old data and if it is recent enough. don't
+		// really wanna get banned or rate throttled by rdap servers.
+
+		$Old = DB\Domain::GetByField('Domain', $Domain);
+
+		if($Old && $Old->WasRecentlyLogged()) {
+			return Tools\RegistrationInfo::FromDB($Old);
+		}
 
 		////////
 

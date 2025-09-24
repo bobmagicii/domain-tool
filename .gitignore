@@ -1,8 +1,8 @@
 .phpunit.cache
 .vendex
 .DS_Store
+*.sqlite
 
-/domains.sqlite
 /env.lock
 /backups
 /build
