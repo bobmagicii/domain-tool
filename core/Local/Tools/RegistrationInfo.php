@@ -48,6 +48,12 @@ extends Common\Prototype {
 	public ?Common\Date
 	$DateExpire = NULL;
 
+	public bool
+	$Cache = FALSE;
+
+	public bool
+	$Valid = TRUE;
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
@@ -225,15 +231,21 @@ extends Common\Prototype {
 		}
 
 		catch(Local\Errors\RDAP\CommandFailed $Err) {
+			// rdap says unregistered domain
 			if(str_contains($Err->GetMessage(), '404'))
-			$Data = Local\Formats\RDAP\Domain::FromNull($Domain);
+			$Data = Local\Formats\RDAP\Domain::FromNull($Domain, TRUE);
+
+			// rdap says this tld doesnt exist or the domain sucks
+			elseif(str_contains($Err->GetMessage(), 'No RDAP servers'))
+			$Data = Local\Formats\RDAP\Domain::FromNull($Domain, FALSE);
 
 			else
 			throw $Err;
 		}
 
 		$Output = new static([
-			'Domain'       => $Domain,
+			'Domain'       => $Data->Domain,
+			'Valid'        => $Data->Valid,
 			'Registrar'    => $Data->FindRegistrarName() ?: NULL,
 			'DateRegister' => $Data->FindRegistrationDate(),
 			'DateExpire'   => $Data->FindExpirationDate(),
@@ -252,7 +264,8 @@ extends Common\Prototype {
 			'Registrar'    => $Row->Registrar ?: NULL,
 			'DateRegister' => Common\Date::FromTime($Row->TimeRegRegister),
 			'DateExpire'   => Common\Date::FromTime($Row->TimeRegExpire),
-			'DateUpdate'   => Common\Date::FromTime($Row->TimeRegUpdate)
+			'DateUpdate'   => Common\Date::FromTime($Row->TimeRegUpdate),
+			'Cache'        => TRUE
 		]);
 
 		return $Output;

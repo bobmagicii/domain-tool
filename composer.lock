@@ -233,12 +233,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/netherphp/common.git",
-                "reference": "2ffd61a8b5c515d604194a5eeb96fb4301ed34bf"
+                "reference": "8990f093a859629f8d73600b0d9c0bddeb8d5f60"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/netherphp/common/zipball/2ffd61a8b5c515d604194a5eeb96fb4301ed34bf",
-                "reference": "2ffd61a8b5c515d604194a5eeb96fb4301ed34bf",
+                "url": "https://api.github.com/repos/netherphp/common/zipball/8990f093a859629f8d73600b0d9c0bddeb8d5f60",
+                "reference": "8990f093a859629f8d73600b0d9c0bddeb8d5f60",
                 "shasum": ""
             },
             "require": {
@@ -281,7 +281,7 @@
                 "issues": "https://github.com/netherphp/common/issues",
                 "source": "https://github.com/netherphp/common/tree/master"
             },
-            "time": "2025-09-23T01:46:04+00:00"
+            "time": "2025-09-24T18:55:49+00:00"
         },
         {
             "name": "netherphp/console",
@@ -348,12 +348,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/netherphp/database.git",
-                "reference": "59274ee82a85ab1403114f517bea2c3d6c5da725"
+                "reference": "2b6908842c7cdf0ba290b7b9778b886770713735"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/netherphp/database/zipball/59274ee82a85ab1403114f517bea2c3d6c5da725",
-                "reference": "59274ee82a85ab1403114f517bea2c3d6c5da725",
+                "url": "https://api.github.com/repos/netherphp/database/zipball/2b6908842c7cdf0ba290b7b9778b886770713735",
+                "reference": "2b6908842c7cdf0ba290b7b9778b886770713735",
                 "shasum": ""
             },
             "require": {
@@ -399,7 +399,7 @@
                 "issues": "https://github.com/netherphp/database/issues",
                 "source": "https://github.com/netherphp/database/tree/redux"
             },
-            "time": "2025-09-23T03:18:49+00:00"
+            "time": "2025-09-24T19:54:00+00:00"
         },
         {
             "name": "netherphp/dye",

@@ -70,4 +70,17 @@ extends Database\Prototype {
 		return FALSE;
 	}
 
+	public function
+	IsRegAboutToExpire(int $TimeWindow=(Common\Values::SecPerDay*3)):
+	bool {
+
+		$Now = Common\Date::Unixtime();
+		$Diff = $this->TimeRegExpire - $Now;
+
+		if($Diff < 0 || $Diff < $TimeWindow)
+		return TRUE;
+
+		return FALSE;
+	}
+
 };

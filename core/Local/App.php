@@ -167,6 +167,7 @@ extends Console\Client {
 		$OptShort = $this->GetOption('short') ?: FALSE;
 		$OptVerbose = $this->GetOption('verbose') ?: FALSE;
 		$OptQuiet = $this->GetOption('quiet') ?: FALSE;
+		$OptRegDelay = (int)$this->GetOption('regdelay') ?: 0;
 
 		$Domains = NULL;
 		$Files = NULL;
@@ -193,7 +194,7 @@ extends Console\Client {
 
 		////////
 
-		$this->RunDomainsReport($Domains, $OptLogToDB);
+		$this->RunDomainsReport($Domains, $OptLogToDB, $OptRegDelay);
 
 		////////
 
@@ -233,16 +234,18 @@ extends Console\Client {
 	////////////////////////////////////////////////////////////////
 
 	protected function
-	RunDomainsReport(Common\Datastore $Domains, bool $LogToDB=FALSE):
+	RunDomainsReport(Common\Datastore $Domains, bool $LogToDB=FALSE, int $RegDelay=0):
 	void {
 
-		$Domains->RemapKeyValue(function(string $Domain) use($LogToDB) {
+		$Domains->RemapKeyValue(function(string $Domain) use($LogToDB, $RegDelay) {
+
+			echo $Domain, PHP_EOL;
 
 			$Cert = Tools\CertInfo::FromNull($Domain);
 			$Now = Common\Date::Unixtime();
 
 			$this->TimerReg->Start();
-			$Reg = $this->FetchRegistrationInfo($Domain);
+			$Reg = $this->FetchRegistrationInfo($Domain, $RegDelay);
 			$this->TimerReg->Stop();
 
 			if($Reg->IsRegistered()) {
@@ -253,7 +256,7 @@ extends Console\Client {
 
 			////////
 
-			//if($LogToDB) {
+			if($Reg->Valid) {
 				$Old = DB\Domain::GetByField('Domain', $Domain);
 
 				if($Old) $Old->Update([
@@ -275,7 +278,7 @@ extends Console\Client {
 					'TimeRegUpdate'   => $Reg->GetTimeUpdate(),
 					'TimeCertExpire'  => $Cert->GetTimeExpire()
 				]);
-			//}
+			}
 
 			////////
 
@@ -449,6 +452,13 @@ extends Console\Client {
 				$this->Format($this->GetCertStatusChar($Cert->GetStatusCode()), C: $CertStyle)
 			);
 
+			if($Reg->Cache)
+			$StatusLabel = str_replace(
+				$this->GetRegStatusChar($Reg->GetStatusCode()),
+				'+',
+				$StatusLabel
+			);
+
 			////////
 
 			$Rows->Push([
@@ -552,7 +562,7 @@ extends Console\Client {
 	////////////////////////////////////////////////////////////////
 
 	protected function
-	FetchRegistrationInfo(string $Domain):
+	FetchRegistrationInfo(string $Domain, int $RegDelay=0):
 	Tools\RegistrationInfo {
 
 		$Mode = $this->Config->Get(static::ConfRegMode);
@@ -564,15 +574,26 @@ extends Console\Client {
 
 		$Old = DB\Domain::GetByField('Domain', $Domain);
 
-		if($Old && $Old->WasRecentlyLogged()) {
+		$Fuzz = 5;
+		$OneDay = (Common\Values::SecPerDay) - $Fuzz;
+		$ThreeDay = (Common\Values::SecPerDay * 3) - $Fuzz;
+
+		if($Old) {
+			if(!$Old->IsRegAboutToExpire($ThreeDay) || $Old->WasRecentlyLogged($OneDay))
 			return Tools\RegistrationInfo::FromDB($Old);
 		}
 
 		////////
 
+		// if we are really going to commit to the remote query then it
+		// is time to consider the delay to throttle.
+
 		$Info = match($Mode) {
 			default => Tools\RegistrationInfo::FetchViaRDAP($Domain)
 		};
+
+		if($RegDelay > 0)
+		sleep($RegDelay);
 
 		////////
 

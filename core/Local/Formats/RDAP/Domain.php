@@ -24,6 +24,9 @@ extends Common\Prototype {
 	public array|Common\Datastore
 	$Entities = [];
 
+	public bool
+	$Valid = TRUE;
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
@@ -156,11 +159,12 @@ extends Common\Prototype {
 	}
 
 	static public function
-	FromNull(string $Domain):
+	FromNull(string $Domain, bool $Valid=TRUE):
 	static {
 
 		$Output = new static([
-			'Domain' => $Domain
+			'Domain' => $Domain,
+			'Valid'  => $Valid
 		]);
 
 		return $Output;
