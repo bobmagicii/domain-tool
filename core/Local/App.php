@@ -239,7 +239,7 @@ extends Console\Client {
 
 		$Domains->RemapKeyValue(function(string $Domain) use($LogToDB, $RegDelay) {
 
-			echo $Domain, PHP_EOL;
+			//echo $Domain, PHP_EOL;
 
 			$Cert = Tools\CertInfo::FromNull($Domain);
 			$Now = Common\Date::Unixtime();

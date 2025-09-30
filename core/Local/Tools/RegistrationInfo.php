@@ -86,7 +86,11 @@ extends Common\Prototype {
 	GetRegistrarName():
 	string {
 
-		if(!$this->IsRegistered())
+		// in the case of co.uk since it is treated as a tld we were able
+		// to get a registrar name but not any other data about it. the
+		// other compound tld probably work in a simliar ay.
+
+		if(!$this->Registrar)
 		return '';
 
 		return $this->Registrar;
@@ -219,6 +223,7 @@ extends Common\Prototype {
 	static {
 
 		$LookupDomain = Local\Util::StripSubdomains($Domain);
+		$LookupDomain = $Domain;
 		$Client = NULL;
 		$Data = NULL;
 		$Output = NULL;
@@ -241,6 +246,10 @@ extends Common\Prototype {
 
 			else
 			throw $Err;
+		}
+
+		catch(Local\Errors\RDAP\DomainInvalid $Err) {
+			$Data = Local\Formats\RDAP\Domain::FromNull($Domain, FALSE);
 		}
 
 		$Output = new static([

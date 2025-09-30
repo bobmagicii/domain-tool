@@ -29,8 +29,8 @@ class CommandRDAP {
 	Fetch(string $Domain):
 	Local\Formats\RDAP\Domain {
 
-		if(substr_count($Domain, '.') !== 1)
-		return Local\Formats\RDAP\Domain::FromNull($Domain);
+		if(substr_count($Domain, '.') < 1)
+		throw new Local\Errors\RDAP\DomainInvalid($Domain);
 
 		////////
 
