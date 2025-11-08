@@ -156,6 +156,7 @@ extends Console\Client {
 	#[Console\Meta\Toggle('--db', 'Store results in SQLite database.')]
 	#[Console\Meta\Toggle('--short', 'Only print domain table to terminal.')]
 	#[Console\Meta\Toggle('--quiet', 'No output printed to terminal.')]
+	#[Console\Meta\Value('--regdelay', 'Delay before next domain if registry contacted.')]
 	public function
 	HandleDomains():
 	int {
